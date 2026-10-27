@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TruthLens — Misinformation Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060911;
+  --s1:#0b1120;
+  --s2:#0f1829;
+  --bd:rgba(255,255,255,0.065);
+  --bd2:rgba(255,255,255,0.12);
+  --bda:rgba(59,130,246,0.45);
+  --t1:#dde5f4;
+  --t2:#6b84aa;
+  --t3:#2e4268;
+  --blue:#3b82f6;
+  --blue-d:#1d4ed8;
+  --green:#10b981;
+  --amber:#f59e0b;
+  --red:#ef4444;
+  --mono:'JetBrains Mono','SF Mono','Fira Code',monospace;
+  --sans:'Inter',system-ui,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px;line-height:1.5;overflow-x:hidden}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+.shell{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+header{
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;border-bottom:1px solid var(--bd);
+  background:rgba(6,9,17,0.85);backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:100;flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:28px;height:28px;border:1.5px solid var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.brand-mark-inner{width:10px;height:10px;background:var(--blue);border-radius:2px;animation:pulse-mark 2.5s ease-in-out infinite}
+@keyframes pulse-mark{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.3px;color:var(--t1)}
+.brand-sub{font-size:11px;color:var(--t3);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+
+nav{display:flex;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.nav-btn{
+  padding:7px 20px;border:none;background:transparent;color:var(--t2);
+  cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500;
+  transition:all .15s;border-right:1px solid var(--bd);letter-spacing:.1px;
+}
+.nav-btn:last-child{border-right:none}
+.nav-btn:hover{background:rgba(255,255,255,0.04);color:var(--t1)}
+.nav-btn.active{background:rgba(59,130,246,0.12);color:var(--blue)}
+
+.hd-right{display:flex;align-items:center;gap:20px}
+.api-pill{display:flex;align-items:center;gap:8px;padding:5px 12px;border:1px solid var(--bd);border-radius:6px;background:var(--s1)}
+.api-pill input{background:none;border:none;outline:none;color:var(--t1);font-size:12px;font-family:var(--mono);width:180px}
+.api-pill button{background:none;border:none;color:var(--blue);cursor:pointer;font-size:12px;font-family:var(--sans);padding:0;transition:color .15s}
+.api-pill button:hover{color:#93c5fd}
+.status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--t3);transition:background .3s,box-shadow .3s}
+.dot.ok{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.5)}
+.dot.err{background:var(--red);box-shadow:0 0 6px rgba(239,68,68,.5)}
+
+/* ── WORKSPACE ── */
+.workspace{flex:1;display:grid;grid-template-columns:420px 1fr;min-height:0}
+.left-col{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto;background:rgba(11,17,32,0.6)}
+.right-col{display:flex;flex-direction:column;overflow-y:auto}
+
+/* ── PANELS ── */
+.panel{display:none;flex:1}
+.panel.active{display:flex;flex-direction:column}
+.panel-left,.panel-right{padding:28px 28px 40px}
+
+.section-lbl{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:16px}
+.panel-title{font-size:20px;font-weight:600;letter-spacing:-.4px;margin-bottom:4px}
+.panel-desc{font-size:13px;color:var(--t2);margin-bottom:28px;line-height:1.6}
+
+/* ── INPUTS ── */
+textarea,input[type=text]{
+  width:100%;background:var(--s2);border:1px solid var(--bd);
+  border-radius:8px;padding:12px 14px;color:var(--t1);
+  font-size:13px;line-height:1.6;resize:vertical;outline:none;
+  font-family:var(--sans);transition:border-color .15s;
+}
+textarea:focus,input[type=text]:focus{border-color:var(--bda)}
+textarea::placeholder,input::placeholder{color:var(--t3)}
+
+.field{margin-bottom:16px}
+.field-label{font-size:11px;font-weight:500;color:var(--t2);margin-bottom:7px;letter-spacing:.3px}
+
+.slider-row{display:flex;align-items:center;gap:12px}
+.slider-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--bd2);border-radius:2px;outline:none}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid var(--bg)}
+.slider-val{font-size:12px;font-family:var(--mono);color:var(--blue);min-width:28px;text-align:right}
+
+.upload-zone{
+  border:1px dashed var(--bd2);border-radius:8px;padding:32px 20px;
+  text-align:center;cursor:pointer;position:relative;transition:border-color .15s,background .15s;
+}
+.upload-zone:hover{border-color:var(--bda);background:rgba(59,130,246,0.03)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{width:36px;height:36px;margin:0 auto 10px;border:1px solid var(--bd2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--t2)}
+.upload-icon svg{width:18px;height:18px}
+.upload-zone p{font-size:12px;color:var(--t2)}.upload-zone strong{display:block;font-size:13px;color:var(--t1);font-weight:500;margin-bottom:3px}
+.img-preview{width:100%;max-height:160px;object-fit:contain;border-radius:6px;margin-top:12px;display:none}
+
+.btn{
+  width:100%;padding:11px 20px;border:none;border-radius:8px;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);
+  letter-spacing:.2px;transition:all .15s;margin-top:20px;
+}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-primary:active{transform:scale(.99)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--bd);margin:24px 0}
+
+/* ── RIGHT COLUMN — IDLE STATE ── */
+.idle-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:8px;opacity:.4}
+.idle-state svg{width:48px;height:48px;color:var(--t3)}
+.idle-state p{font-size:13px;color:var(--t2);text-align:center}
+
+/* ── RESULTS ── */
+.results{padding:28px;display:flex;flex-direction:column;gap:20px}
+
+/* Score card */
+.score-card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:28px 28px 24px;position:relative;overflow:hidden}
+.score-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transition:background .5s}
+.score-card.credible::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.score-card.suspicious::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.score-card.fake::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.score-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.score-num{font-size:60px;font-weight:300;font-family:var(--mono);letter-spacing:-3px;line-height:1;transition:color .4s}
+.score-num.credible{color:var(--green)}
+.score-num.suspicious{color:var(--amber)}
+.score-num.fake{color:var(--red)}
+.score-num.idle{color:var(--t3)}
+.verdict-badge{padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono)}
+.verdict-badge.credible{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.verdict-badge.suspicious{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+.verdict-badge.fake{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.verdict-badge.idle{background:var(--s2);color:var(--t3);border:1px solid var(--bd)}
+
+/* Arc */
+.arc-wrap{position:relative;width:200px;height:104px;margin:0 auto 16px}
+.arc-wrap svg{overflow:visible}
+.arc-bg{fill:none;stroke:var(--bd2);stroke-width:6;stroke-linecap:round}
+.arc-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1),stroke .4s}
+
+/* Stat row */
+.stat-row{display:flex;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.stat{flex:1;padding:12px 16px;border-right:1px solid var(--bd)}
+.stat:last-child{border-right:none}
+.stat-val{font-size:22px;font-weight:500;font-family:var(--mono);line-height:1}
+.stat-label{font-size:10px;color:var(--t2);margin-top:3px;letter-spacing:.8px;text-transform:uppercase}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.blue{color:var(--blue)}
+
+/* Explanation */
+.explanation{font-size:12px;color:var(--t2);line-height:1.7;padding:12px 14px;background:var(--s2);border-radius:6px;border-left:2px solid var(--bda)}
+
+/* Signal bars */
+.sig-block{display:flex;flex-direction:column;gap:10px}
+.sig-row{display:grid;grid-template-columns:1fr 36px;align-items:center;gap:10px}
+.sig-label{font-size:12px;color:var(--t2)}
+.sig-bar-track{height:3px;background:var(--bd2);border-radius:2px;overflow:hidden;margin-top:4px}
+.sig-bar-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.sig-pct{font-size:11px;font-family:var(--mono);color:var(--t1);text-align:right}
+
+/* Claims */
+.claims-table{display:flex;flex-direction:column;gap:1px;background:var(--bd);border-radius:8px;overflow:hidden}
+.claim-row{background:var(--s1);transition:background .1s}
+.claim-row:hover{background:var(--s2)}
+.claim-hd{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
+.claim-icon{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.ci-s{background:rgba(16,185,129,.15);color:var(--green)}.ci-r{background:rgba(239,68,68,.15);color:var(--red)}.ci-n{background:rgba(107,114,128,.12);color:var(--t2)}
+.claim-snippet{font-size:12px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--t1)}
+.claim-conf{font-size:11px;font-family:var(--mono);color:var(--t2);flex-shrink:0}
+.claim-detail{max-height:0;overflow:hidden;transition:max-height .25s ease;background:var(--s2);border-top:1px solid transparent}
+.claim-detail.open{max-height:150px;border-top-color:var(--bd)}
+.cd-inner{padding:10px 14px 12px 42px}
+.cd-line{font-size:12px;color:var(--t2);margin-bottom:4px;line-height:1.5}
+.cd-line span{color:var(--t1)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:10px;padding:2px 8px;border-radius:3px;background:rgba(59,130,246,.1);color:#93c5fd;border:1px solid rgba(59,130,246,.2);font-family:var(--mono)}
+
+/* Fusion weights */
+.wt-row{display:flex;gap:1px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.wt{flex:1;padding:12px;background:var(--s1);text-align:center}
+.wt-val{font-size:20px;font-weight:500;font-family:var(--mono);color:var(--blue)}
+.wt-label{font-size:10px;color:var(--t2);letter-spacing:.8px;text-transform:uppercase;margin-top:2px}
+
+/* Heatmap */
+.heatmap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.heatmap-grid img{width:100%;border-radius:6px}
+.hm-label{font-size:10px;color:var(--t2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;text-align:center}
+
+/* Spinner */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="shell">
+<header>
+  <div class="brand">
+    <div class="brand-mark"><div class="brand-mark-inner"></div></div>
+    <div>
+      <div class="brand-name">TruthLens</div>
+      <div class="brand-sub">Misinformation Detector</div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" onclick="showPanel('text',this)">Text</button>
+    <button class="nav-btn" onclick="showPanel('image',this)">Image</button>
+    <button class="nav-btn" onclick="showPanel('fusion',this)">Fusion</button>
+  </nav>
+
+  <div class="hd-right">
+    <div class="api-pill">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--t3)"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <input type="text" id="apiUrl" value="http://127.0.0.1:8000">
+      <button onclick="checkHealth()">ping</button>
+    </div>
+    <div class="status"><div class="dot" id="dot"></div><span id="statusTxt">—</span></div>
+  </div>
+</header>
+
+<div class="workspace">
+
+<!-- ══════════════ TEXT ══════════════ -->
+<div class="panel active" id="p-text">
+  <div class="panel-left left-col">
+    <div class="section-lbl">Analysis mode</div>
+    <div class="panel-title">Text Credibility</div>
+    <div class="panel-desc">Extracts verifiable claims, runs named entity recognition, and verifies each claim against the knowledge graph using NLI.</div>
+    <div class="field">
+      <div class="field-label">Article or claim text</div>
+      <textarea id="textInput" rows="9" placeholder="Paste a news article, social media post, or any text to analyze for credibility..."></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label">Max claims to extract</div>
+      <div class="slider-row">
+        <input type="range" min="3" max="25" value="10" id="maxClaims" oninput="document.getElementById('mcv').textContent=this.value">
+        <span class="slider-val" id="mcv">10</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="textBtn" onclick="analyzeText()">Analyze Text</button>
+  </div>
+
+  <div class="right-col" id="textRight">
+    <div class="idle-state" id="textIdle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6M9 16h6M17 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg>
+      <p>Enter text and run analysis<br>to see results here</p>
+    </div>
+    <div class="results" id="textResults" style="display:none">
+      <div class="score-card" id="textScoreCard">
+        <div class="score-row">
+          <div class="score-num idle" id="textNum">—</div>
+          <div class="verdict-badge idle" id="textBadge">PENDING</div>
+        </div>
+        <div class="arc-wrap">
+          <svg width="200" height="104" viewBox="0 0 200 104">
+            <path class="arc-bg" d="M20,100 A80,80,0,0,1,180,100"/>
+            <path class="arc-fill" id="textArc" d="M20,100 A80,80,0,0,1,180,100" stroke="var(--t3)" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+          </svg>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val green" id="ts0">0</div><div class="stat-label">Supported</div></div>
+          <div class="stat"><div class="stat-val red" id="ts1">0</div><div class="stat-label">Refuted</div></div>
+          <div class="stat"><div class="stat-val amber" id="ts2">0</div><div class="stat-label">Inconclusive</div></div>
+        </div>
+      </div>
+      <div class="explanation" id="textExp" style="display:none"></div>
+      <div>
+        <div class="section-lbl">Claim breakdown</div>
+        <div class="claims-table" id="textClaims"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ IMAGE ══════════════ -->
+<div class="panel" id="p-image">
+  <div class="panel-left left-col">
+    <div class="section-lbl">Analysis mode</div>
+    <div class="panel-title">Image Analysis</div>
+    <div class="panel-desc">EfficientNet-B0 CNN deepfake detector combined with FFT frequency anomaly analysis and Grad-CAM saliency mapping.</div>
+    <div class="field">
+      <div class="field-label">Upload image</div>
+      <div class="upload-zone" id="imgDrop">
+        <input type="file" id="imgFile" accept="image/*" onchange="onImgSelect(this,'imgPrev')">
+        <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <strong>Drop image or click to upload</strong>
+        <p>JPG · PNG · WEBP</p>
+        <img id="imgPrev" class="img-preview">
+      </div>
+    </div>
+    <button class="btn btn-primary" id="imgBtn" onclick="analyzeImage()">Run Detection</button>
+  </div>
+
+  <div class="right-col" id="imageRight">
+    <div class="idle-state" id="imageIdle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <p>Upload an image and run detection<br>to see results here</p>
+    </div>
+    <div class="results" id="imgResults" style="display:none">
+      <div class="score-card" id="imgScoreCard">
+        <div class="score-row">
+          <div class="score-num idle" id="imgNum">—</div>
+          <div class="verdict-badge idle" id="imgBadge">PENDING</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val" id="is0">—</div><div class="stat-label">Fake Prob</div></div>
+          <div class="stat"><div class="stat-val" id="is1">—</div><div class="stat-label">Faces</div></div>
+          <div class="stat"><div class="stat-val" id="is2">—</div><div class="stat-label">HF Energy</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-lbl">Signal breakdown</div>
+        <div class="sig-block" id="imgSigs"></div>
+      </div>
+      <div class="explanation" id="imgExp" style="display:none"></div>
+      <div id="imgGradcam" style="display:none">
+        <div class="section-lbl">Grad-CAM saliency</div>
+        <div class="heatmap-grid" id="imgHeatmap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FUSION ══════════════ -->
+<div class="panel" id="p-fusion">
+  <div class="panel-left left-col">
+    <div class="section-lbl">Analysis mode</div>
+    <div class="panel-title">Multimodal Fusion</div>
+    <div class="panel-desc">Confidence-weighted adaptive fusion of text KG-verification and CNN image signals. Each modality weight scales with its confidence.</div>
+    <div class="field">
+      <div class="field-label">Article text (optional)</div>
+      <textarea id="fusionText" rows="6" placeholder="Paste article text..."></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label">Image (optional)</div>
+      <div class="upload-zone">
+        <input type="file" id="fusionFile" accept="image/*" onchange="onImgSelect(this,'fusionPrev')">
+        <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <strong>Drop image or click to upload</strong>
+        <p>Optional — boosts fusion accuracy</p>
+        <img id="fusionPrev" class="img-preview">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Source reputation prior</div>
+      <div class="slider-row">
+        <input type="range" min="0" max="1" step="0.05" value="0.5" id="srcRep" oninput="document.getElementById('srv').textContent=parseFloat(this.value).toFixed(2)">
+        <span class="slider-val" id="srv">0.50</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="fusionBtn" onclick="analyzeFusion()">Run Fusion Analysis</button>
+  </div>
+
+  <div class="right-col" id="fusionRight">
+    <div class="idle-state" id="fusionIdle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+      <p>Provide text and/or an image,<br>then run fusion analysis</p>
+    </div>
+    <div class="results" id="fusionResults" style="display:none">
+      <div class="score-card" id="fusionScoreCard">
+        <div class="score-row">
+          <div class="score-num idle" id="fusionNum">—</div>
+          <div class="verdict-badge idle" id="fusionBadge">PENDING</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val" id="fs0">—</div><div class="stat-label">Risk</div></div>
+          <div class="stat"><div class="stat-val blue" id="fs1">—</div><div class="stat-label">Confidence</div></div>
+          <div class="stat"><div class="stat-val" id="fs2">—</div><div class="stat-label">Credibility</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-lbl">Fusion weights</div>
+        <div class="wt-row" id="fusionWts"></div>
+        <div class="section-lbl">Signal breakdown</div>
+        <div class="sig-block" id="fusionSigs"></div>
+      </div>
+      <div id="fusionTextSec" style="display:none">
+        <div class="section-lbl">Text claims</div>
+        <div class="claims-table" id="fusionClaims"></div>
+      </div>
+      <div id="fusionImgSec" style="display:none">
+        <div class="section-lbl">Grad-CAM saliency</div>
+        <div class="heatmap-grid" id="fusionHeatmap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /workspace -->
+</div><!-- /shell -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const canvas = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 1000);
+camera.position.set(40, 0, 120);
+camera.lookAt(0, 0, 0);
+
+function resize(){
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+const mat = new THREE.MeshBasicMaterial({color:0x1e3a8a, wireframe:true, transparent:true, opacity:.18});
+const geo = new THREE.IcosahedronGeometry(46, 3);
+const sphere = new THREE.Mesh(geo, mat);
+scene.add(sphere);
+
+const dotGeo = new THREE.SphereGeometry(.6, 6, 6);
+const dotMat = new THREE.MeshBasicMaterial({color:0x3b82f6, transparent:true, opacity:.55});
+const pos = geo.attributes.position;
+const seen = new Set();
+for(let i = 0; i < pos.count; i++){
+  const k = `${pos.getX(i).toFixed(1)},${pos.getY(i).toFixed(1)},${pos.getZ(i).toFixed(1)}`;
+  if(!seen.has(k)){
+    seen.add(k);
+    const d = new THREE.Mesh(dotGeo, dotMat);
+    d.position.set(pos.getX(i), pos.getY(i), pos.getZ(i));
+    scene.add(d);
+  }
+}
+
+const ringGeo = new THREE.TorusGeometry(58, .3, 6, 80);
+const ringMat = new THREE.MeshBasicMaterial({color:0x1d4ed8, transparent:true, opacity:.25});
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = Math.PI/2;
+scene.add(ring);
+
+const ring2 = new THREE.Mesh(new THREE.TorusGeometry(52, .2, 6, 80), new THREE.MeshBasicMaterial({color:0x2563eb, transparent:true, opacity:.15}));
+ring2.rotation.x = Math.PI/3;
+ring2.rotation.z = Math.PI/5;
+scene.add(ring2);
+
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => {mx=(e.clientX/innerWidth-.5)*.4; my=(e.clientY/innerHeight-.5)*.3;});
+
+let t = 0;
+function animate(){
+  requestAnimationFrame(animate);
+  t += .004;
+  sphere.rotation.y = t * .18;
+  sphere.rotation.x = Math.sin(t * .07) * .08;
+  ring.rotation.z = t * .06;
+  ring2.rotation.y = t * .12;
+  camera.position.x += (mx * 20 - camera.position.x) * .03;
+  camera.position.y += (-my * 14 - camera.position.y) * .03;
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+
+<script>
+let API = 'http://127.0.0.1:8000';
+let imgFile = null, fusionImgFile = null;
+
+function api(){ return document.getElementById('apiUrl').value.replace(/\/$/,''); }
+
+async function checkHealth(){
+  const dot = document.getElementById('dot');
+  const txt = document.getElementById('statusTxt');
+  try{
+    const r = await fetch(`${api()}/health`, {signal: AbortSignal.timeout(4000)});
+    if(r.ok){ dot.className='dot ok'; txt.textContent='online'; }
+    else throw 0;
+  } catch{ dot.className='dot err'; txt.textContent='offline'; }
+}
+
+function showPanel(name, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setVerdict(numId, badgeId, cardId, score){
+  const cls = score>=.70?'credible':score>=.40?'suspicious':'fake';
+  const lbl = score>=.70?'CREDIBLE':score>=.40?'SUSPICIOUS':'LIKELY FAKE';
+  document.getElementById(numId).className='score-num '+cls;
+  document.getElementById(numId).textContent=Math.round(score*100)+'%';
+  document.getElementById(badgeId).className='verdict-badge '+cls;
+  document.getElementById(badgeId).textContent=lbl;
+  document.getElementById(cardId).className='score-card '+cls;
+}
+
+function setArc(id, score){
+  const el = document.getElementById(id);
+  const color = score>=.70?'#10b981':score>=.40?'#f59e0b':'#ef4444';
+  const total = 251;
+  el.style.strokeDashoffset = total - score * total;
+  el.style.stroke = color;
+}
+
+function renderSigs(id, bars){
+  document.getElementById(id).innerHTML = bars.map(b=>{
+    const pct = Math.round(b.v*100);
+    const color = pct>=70?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
+    return `<div>
+      <div class="sig-row">
+        <div><div class="sig-label">${b.l}</div><div class="sig-bar-track"><div class="sig-bar-fill" data-w="${pct}" style="width:0;background:${color}"></div></div></div>
+        <div class="sig-pct">${pct}%</div>
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll(`#${id} .sig-bar-fill`).forEach(f=>f.style.width=f.dataset.w+'%'), 60);
+}
+
+function renderClaims(id, claims){
+  document.getElementById(id).innerHTML = claims.map((c,i)=>{
+    const v = c.verification||{};
+    const lbl = v.label||'NOT_ENOUGH_INFO';
+    const ic = lbl==='SUPPORTED'?'ci-s':lbl==='REFUTED'?'ci-r':'ci-n';
+    const sym = lbl==='SUPPORTED'?'+':lbl==='REFUTED'?'−':'?';
+    const ents = (c.entities||[]).map(e=>`<span class="chip">${e.text} · ${e.label}</span>`).join('');
+    const snip = c.claim.length>72?c.claim.slice(0,72)+'…':c.claim;
+    return `<div class="claim-row">
+      <div class="claim-hd" onclick="toggleClaim(this)">
+        <div class="claim-icon ${ic}">${sym}</div>
+        <div class="claim-snippet">${snip}</div>
+        <div class="claim-conf">${Math.round((v.score||.5)*100)}%</div>
+      </div>
+      <div class="claim-detail">
+        <div class="cd-inner">
+          <div class="cd-line">Full claim: <span>${c.claim}</span></div>
+          ${v.reason?`<div class="cd-line">Reason: <span>${v.reason}</span></div>`:''}
+          ${v.best_fact?`<div class="cd-line">KG fact: <span>${v.best_fact}</span></div>`:''}
+          ${ents?`<div class="chips">${ents}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleClaim(hd){
+  hd.nextElementSibling.classList.toggle('open');
+}
+
+function onImgSelect(input, prevId){
+  const f = input.files[0];
+  if(!f) return;
+  if(input.id==='imgFile') imgFile = f;
+  else fusionImgFile = f;
+  const p = document.getElementById(prevId);
+  p.src = URL.createObjectURL(f);
+  p.style.display = 'block';
+}
+
+async function analyzeText(){
+  API = api();
+  const text = document.getElementById('textInput').value.trim();
+  if(!text){ alert('Enter text first.'); return; }
+  const btn = document.getElementById('textBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Analyzing…';
+  document.getElementById('textIdle').style.display='none';
+  document.getElementById('textResults').style.display='flex';
+  try{
+    const r = await fetch(`${API}/text/analyze`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,max_claims:+document.getElementById('maxClaims').value})});
+    if(!r.ok) throw new Error(`${r.status}`);
+    const d = await r.json();
+    const score = d.credibility_score||0;
+    setVerdict('textNum','textBadge','textScoreCard', score);
+    setArc('textArc', score);
+    document.getElementById('ts0').textContent = d.supported_count||0;
+    document.getElementById('ts1').textContent = d.refuted_count||0;
+    document.getElementById('ts2').textContent = d.nei_count||0;
+    const exp = document.getElementById('textExp');
+    if(d.explanation){ exp.textContent=d.explanation; exp.style.display='block'; }
+    renderClaims('textClaims', d.claims||[]);
+  } catch(e){ alert('Error: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='Analyze Text'; }
+}
+
+async function analyzeImage(){
+  API = api();
+  if(!imgFile){ alert('Upload an image first.'); return; }
+  const btn = document.getElementById('imgBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Running CNN…';
+  document.getElementById('imageIdle').style.display='none';
+  document.getElementById('imgResults').style.display='flex';
+  const fd = new FormData(); fd.append('file', imgFile);
+  try{
+    const r = await fetch(`${API}/vision/analyze_image`,{method:'POST',body:fd});
+    if(!r.ok) throw new Error(`${r.status}`);
+    const d = await r.json();
+    const fp = d.is_fake_prob||0, cred = d.credibility_score||0;
+    setVerdict('imgNum','imgBadge','imgScoreCard', cred);
+    document.getElementById('is0').textContent=Math.round(fp*100)+'%';
+    document.getElementById('is1').textContent=d.num_faces||0;
+    document.getElementById('is2').textContent=(d.high_frequency_energy||0).toFixed(3);
+    renderSigs('imgSigs',[
+      {l:'Overall credibility',v:cred},
+      {l:'CNN model (inverted)',v:1-(d.cnn_fake_prob||0)},
+      {l:'Frequency anomaly (inverted)',v:1-(d.frequency_fake_score||0)},
+    ]);
+    const exp = document.getElementById('imgExp');
+    if(d.explanation){ exp.textContent=d.explanation; exp.style.display='block'; }
+    if(d.gradcam_heatmap_b64){
+      document.getElementById('imgGradcam').style.display='block';
+      const origSrc = document.getElementById('imgPrev').src;
+      document.getElementById('imgHeatmap').innerHTML=`<div><div class="hm-label">Original</div><img src="${origSrc}"></div><div><div class="hm-label">Grad-CAM</div><img src="data:image/png;base64,${d.gradcam_heatmap_b64}"></div>`;
+    }
+  } catch(e){ alert('Error: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='Run Detection'; }
+}
+
+async function analyzeFusion(){
+  API = api();
+  const text = document.getElementById('fusionText').value.trim();
+  if(!text && !fusionImgFile){ alert('Provide text and/or an image.'); return; }
+  const btn = document.getElementById('fusionBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Fusing signals…';
+  document.getElementById('fusionIdle').style.display='none';
+  document.getElementById('fusionResults').style.display='flex';
+  const fd = new FormData();
+  fd.append('text', text);
+  fd.append('source_reputation', document.getElementById('srcRep').value);
+  if(fusionImgFile) fd.append('file', fusionImgFile);
+  try{
+    const r = await fetch(`${API}/fusion/analyze`,{method:'POST',body:fd});
+    if(!r.ok) throw new Error(`${r.status}`);
+    const d = await r.json();
+    const score = d.credibility_score||0;
+    setVerdict('fusionNum','fusionBadge','fusionScoreCard', score);
+    const risk = d.risk_level||'—';
+    document.getElementById('fs0').textContent=risk;
+    document.getElementById('fs0').className='stat-val '+(risk==='HIGH'?'red':risk==='MEDIUM'?'amber':'green');
+    document.getElementById('fs1').textContent=Math.round((d.confidence||0)*100)+'%';
+    document.getElementById('fs2').textContent=Math.round(score*100)+'%';
+    const w = d.fusion_weights||{};
+    document.getElementById('fusionWts').innerHTML=['text','visual','source'].map(k=>`<div class="wt"><div class="wt-val">${Math.round((w[k]||0)*100)}%</div><div class="wt-label">${k}</div></div>`).join('');
+    const sig = d.signals||{};
+    renderSigs('fusionSigs',[
+      {l:'Text credibility',v:sig.text_credibility||0},
+      {l:'Visual credibility',v:sig.visual_credibility!=null?sig.visual_credibility:1},
+      {l:'Source reputation',v:sig.source_reputation||.5},
+    ]);
+    const ta = d.text_analysis||{};
+    if(ta.claims && ta.claims.length){
+      document.getElementById('fusionTextSec').style.display='block';
+      renderClaims('fusionClaims', ta.claims);
+    }
+    const va = d.vision_analysis||{};
+    if(fusionImgFile && va.gradcam_heatmap_b64){
+      document.getElementById('fusionImgSec').style.display='block';
+      document.getElementById('fusionHeatmap').innerHTML=`<div><div class="hm-label">Original</div><img src="${document.getElementById('fusionPrev').src}"></div><div><div class="hm-label">Grad-CAM</div><img src="data:image/png;base64,${va.gradcam_heatmap_b64}"></div>`;
+    }
+  } catch(e){ alert('Error: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='Run Fusion Analysis'; }
+}
+
+setTimeout(checkHealth, 600);
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Example for Cloud Run / similar
+# image: gcr.io/PROJECT/misinformation-api
+# port: 8000
+# env: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+# resources: 1 CPU, 2Gi memory

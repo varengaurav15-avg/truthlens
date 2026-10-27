@@ -1,0 +1,185 @@
+{
+  "_comment": "Single source of truth for the knowledge graph. seed_kg.py pushes these to Neo4j; local_store.py serves them offline. Add facts here.",
+  "facts": [
+    {
+      "subject": "Barack Obama",
+      "relation": "WAS_PRESIDENT_OF",
+      "object": "United States"
+    },
+    {
+      "subject": "Barack Obama",
+      "relation": "BORN_IN",
+      "object": "Hawaii"
+    },
+    {
+      "subject": "Barack Obama",
+      "relation": "SERVED_AS",
+      "object": "44th President"
+    },
+    {
+      "subject": "Joe Biden",
+      "relation": "WAS_PRESIDENT_OF",
+      "object": "United States"
+    },
+    {
+      "subject": "Joe Biden",
+      "relation": "SERVED_AS",
+      "object": "46th President"
+    },
+    {
+      "subject": "Donald Trump",
+      "relation": "WAS_PRESIDENT_OF",
+      "object": "United States"
+    },
+    {
+      "subject": "Donald Trump",
+      "relation": "SERVED_AS",
+      "object": "45th President"
+    },
+    {
+      "subject": "Kamala Harris",
+      "relation": "SERVED_AS",
+      "object": "Vice President"
+    },
+    {
+      "subject": "United States",
+      "relation": "CAPITAL_IS",
+      "object": "Washington DC"
+    },
+    {
+      "subject": "United States",
+      "relation": "HAS_CONSTITUTION",
+      "object": "US Constitution"
+    },
+    {
+      "subject": "Narendra Modi",
+      "relation": "IS_PRIME_MINISTER_OF",
+      "object": "India"
+    },
+    {
+      "subject": "Narendra Modi",
+      "relation": "BELONGS_TO_PARTY",
+      "object": "BJP"
+    },
+    {
+      "subject": "India",
+      "relation": "CAPITAL_IS",
+      "object": "New Delhi"
+    },
+    {
+      "subject": "India",
+      "relation": "IS_A",
+      "object": "democratic republic"
+    },
+    {
+      "subject": "Rahul Gandhi",
+      "relation": "BELONGS_TO_PARTY",
+      "object": "Indian National Congress"
+    },
+    {
+      "subject": "COVID-19",
+      "relation": "IS_CAUSED_BY",
+      "object": "SARS-CoV-2 virus"
+    },
+    {
+      "subject": "COVID-19 vaccine",
+      "relation": "DEVELOPED_BY",
+      "object": "multiple pharmaceutical companies"
+    },
+    {
+      "subject": "COVID-19 vaccine",
+      "relation": "APPROVED_BY",
+      "object": "WHO"
+    },
+    {
+      "subject": "Bill Gates",
+      "relation": "FOUNDED",
+      "object": "Microsoft"
+    },
+    {
+      "subject": "Bill Gates",
+      "relation": "FUNDS",
+      "object": "Bill and Melinda Gates Foundation"
+    },
+    {
+      "subject": "Earth",
+      "relation": "ORBITS",
+      "object": "Sun"
+    },
+    {
+      "subject": "Earth",
+      "relation": "IS_A",
+      "object": "planet"
+    },
+    {
+      "subject": "Moon",
+      "relation": "ORBITS",
+      "object": "Earth"
+    },
+    {
+      "subject": "Elon Musk",
+      "relation": "FOUNDED",
+      "object": "SpaceX"
+    },
+    {
+      "subject": "Elon Musk",
+      "relation": "OWNS",
+      "object": "X (Twitter)"
+    },
+    {
+      "subject": "Elon Musk",
+      "relation": "CO_FOUNDED",
+      "object": "Tesla"
+    },
+    {
+      "subject": "Apple",
+      "relation": "FOUNDED_BY",
+      "object": "Steve Jobs"
+    },
+    {
+      "subject": "Google",
+      "relation": "FOUNDED_BY",
+      "object": "Larry Page and Sergey Brin"
+    },
+    {
+      "subject": "Microsoft",
+      "relation": "FOUNDED_BY",
+      "object": "Bill Gates"
+    },
+    {
+      "subject": "Meta",
+      "relation": "FOUNDED_BY",
+      "object": "Mark Zuckerberg"
+    },
+    {
+      "subject": "Vladimir Putin",
+      "relation": "IS_PRESIDENT_OF",
+      "object": "Russia"
+    },
+    {
+      "subject": "Xi Jinping",
+      "relation": "IS_PRESIDENT_OF",
+      "object": "China"
+    },
+    {
+      "subject": "Emmanuel Macron",
+      "relation": "IS_PRESIDENT_OF",
+      "object": "France"
+    },
+    {
+      "subject": "United Kingdom",
+      "relation": "CAPITAL_IS",
+      "object": "London"
+    },
+    {
+      "subject": "Russia",
+      "relation": "CAPITAL_IS",
+      "object": "Moscow"
+    },
+    {
+      "subject": "China",
+      "relation": "CAPITAL_IS",
+      "object": "Beijing"
+    }
+  ]
+}

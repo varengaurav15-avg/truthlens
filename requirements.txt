@@ -1,0 +1,40 @@
+# API
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.1
+
+# ML — core
+torch>=2.2.0
+transformers>=4.40.0
+sentence-transformers>=2.7.0
+timm>=1.0.0
+
+# Vision
+opencv-python-headless>=4.9.0
+mtcnn>=0.1.1
+scikit-image>=0.23.0
+Pillow>=10.3.0
+
+# NLP
+nltk>=3.8.1
+
+# Graph
+neo4j>=5.18.0
+networkx>=3.3
+
+# Data / ML utils
+numpy>=1.26.0
+scipy>=1.12.0
+pandas>=2.2.0
+scikit-learn>=1.4.0
+
+# Frontend
+streamlit>=1.35.0
+httpx>=0.27.0
+
+# Logging / utilities
+loguru>=0.7.2
+tqdm>=4.66.2

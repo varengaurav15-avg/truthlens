@@ -1,0 +1,6 @@
+subject,relation,object
+Barack Obama,was_president_of,United States
+COVID-19,declared_pandemic_by,WHO
+WHO,founded_in,1948
+NASA,agency_of,United States
+Elon Musk,CEO_of,Tesla

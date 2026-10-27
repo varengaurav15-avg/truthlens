@@ -1,0 +1,69 @@
+# ─────────────────────────────────────────────────────────────
+# Secrets — NEVER commit these
+# .env holds the Neo4j password and the Groq API key.
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ─────────────────────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+env/
+
+# ─────────────────────────────────────────────────────────────
+# Node / frontend
+# ─────────────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# ─────────────────────────────────────────────────────────────
+# Generated at runtime — reproducible, so not tracked
+#   wiki_cache.json       rebuilt automatically from Wikipedia
+#   fever_dev.jsonl       rebuilt by `python get_fever.py`
+#   benchmark_results.json output of `python benchmark.py`
+# data/kg_facts.json IS tracked — it is source data, not generated.
+# ─────────────────────────────────────────────────────────────
+data/wiki_cache.json
+data/fever_dev.jsonl
+data/benchmark_results.json
+data/raw/*
+data/processed/*
+data/external/*
+!data/**/.gitkeep
+
+# ─────────────────────────────────────────────────────────────
+# Model weights — downloaded from HuggingFace on first run
+# ─────────────────────────────────────────────────────────────
+models/*
+!models/**/.gitkeep
+checkpoints/*
+!checkpoints/**/.gitkeep
+*.pt
+*.pth
+*.onnx
+*.safetensors
+
+# ─────────────────────────────────────────────────────────────
+# Editors / OS
+# ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Personal learning notes — not part of the project
+LEARNING-ROADMAP.md
